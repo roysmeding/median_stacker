@@ -33,13 +33,15 @@ struct img *img_load(const char* filename) {
 
 	// retrieve and compute offset
 	float xpos, xres, ypos, yres;
-	TIFFGetField(tif, TIFFTAG_XPOSITION,   &xpos);
-	TIFFGetField(tif, TIFFTAG_XRESOLUTION, &xres);
-	TIFFGetField(tif, TIFFTAG_YPOSITION,   &ypos);
-	TIFFGetField(tif, TIFFTAG_YRESOLUTION, &yres);
+	if(TIFFGetField(tif, TIFFTAG_XPOSITION,   &xpos) && TIFFGetField(tif, TIFFTAG_XRESOLUTION, &xres))
+		img->x = (uint32)roundf(xpos*xres);
+	else
+		img->x = 0;
 
-	img->x = (uint32)roundf(xpos*xres);
-	img->y = (uint32)roundf(ypos*yres);
+	if(TIFFGetField(tif, TIFFTAG_YPOSITION,   &ypos) && TIFFGetField(tif, TIFFTAG_YRESOLUTION, &yres))
+		img->y = (uint32)roundf(ypos*yres);
+	else
+		img->y = 0;
 
 	uint32_t npixels = img->w * img->h;
 	img->data = (uint32*) _TIFFmalloc(npixels * sizeof (uint32));
@@ -127,6 +129,7 @@ int main(int argc, char* argv[]) {
 			uint32_t px = ((uint8_t)round(med0)) + (((uint8_t)round(med1))<<8) + (((uint8_t)round(med2))<<16) + (((uint8_t)round(med3))<<24);
 			canvas[y*canvas_w + x] = px;
 		}
+		fprintf(stderr, "\tBlended line %d/%d\n", y+1, canvas_h);
 	}
 
 	// write output
